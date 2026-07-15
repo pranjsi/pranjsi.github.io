@@ -165,24 +165,24 @@
   .amb{ position:absolute; opacity:0; transition:opacity 1.2s ease; }
   .amb.on{ opacity:1; }
   .amb-orb{
-    top:10%; right:1.5vw; width:230px; height:230px; border-radius:50%;
-    background:radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--teal) 28%, transparent), transparent 65%);
-    filter:blur(6px);
+    top:10%; right:1vw; width:300px; height:300px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--teal) 45%, transparent), transparent 68%);
+    filter:blur(4px);
   }
   .amb-orb2{
-    bottom:8%; left:1vw; width:190px; height:190px; border-radius:50%;
-    background:radial-gradient(circle at 60% 40%, color-mix(in srgb, var(--amber) 20%, transparent), transparent 62%);
-    filter:blur(8px);
+    bottom:8%; left:.6vw; width:250px; height:250px; border-radius:50%;
+    background:radial-gradient(circle at 60% 40%, color-mix(in srgb, var(--amber) 36%, transparent), transparent 65%);
+    filter:blur(5px);
   }
-  .amb-spark{ top:32%; left:1.6vw; }
+  .amb-spark{ top:32%; left:1.2vw; }
   .amb-spark svg{ display:block; }
-  .amb-spark path{ fill:none; stroke:var(--teal); stroke-width:1.5; opacity:.35; }
-  .amb-spark circle{ fill:var(--amber); opacity:.55; }
-  .amb-cols{ bottom:16%; right:2vw; }
-  .amb-cols rect{ fill:var(--teal); opacity:.3; }
-  .amb-dots{ top:58%; left:2.2vw; width:80px; height:110px;
-    background-image:radial-gradient(color-mix(in srgb, var(--text) 28%, transparent) 1.2px, transparent 1.3px);
-    background-size:16px 16px; opacity:.5;
+  .amb-spark path{ fill:none; stroke:var(--teal); stroke-width:2.5; opacity:.6; }
+  .amb-spark circle{ fill:var(--amber); opacity:.85; }
+  .amb-cols{ bottom:16%; right:1.6vw; }
+  .amb-cols rect{ fill:var(--teal); opacity:.55; }
+  .amb-dots{ top:58%; left:1.8vw; width:96px; height:130px;
+    background-image:radial-gradient(color-mix(in srgb, var(--text) 45%, transparent) 1.5px, transparent 1.6px);
+    background-size:16px 16px; opacity:.75;
   }
   @media (max-width:1240px){ .ambient{ display:none; } }
 
@@ -519,32 +519,39 @@
       requestAnimationFrame(step);
     }
 
-    /* ---- scroll reveal (scroll-position based; no IntersectionObserver
-           dependency so it works in throttled/embedded renderers too) ---- */
-    var pendingReveal = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
-    var pendingNums = Array.prototype.slice.call(document.querySelectorAll('.kpi .num'));
+    /* ---- scroll reveal, replayable in both directions (scroll-position
+           based; no IntersectionObserver dependency so it works in
+           throttled/embedded renderers too) ---- */
+    var revealEls = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+    var numEls = Array.prototype.slice.call(document.querySelectorAll('.kpi .num'));
+    var heroTitle = document.querySelector('.hero h1');
 
     if (reduced) {
-      pendingReveal.forEach(function(el){ el.classList.add('in'); });
-      pendingReveal = []; pendingNums = [];
+      revealEls.forEach(function(el){ el.classList.add('in'); });
+      revealEls = []; numEls = [];
     }
 
-    function inView(el){
-      // reveal once the element has entered the viewport OR been scrolled past
-      return el.getBoundingClientRect().top < window.innerHeight - 40;
+    function visibility(el){
+      var r = el.getBoundingClientRect(), h = window.innerHeight;
+      if (r.top < h - 40 && r.bottom > 0) return 'in';
+      if (r.bottom < -80 || r.top > h + 80) return 'out';
+      return 'edge'; // partially out — leave state as-is to avoid flicker
     }
     function sweep(){
-      pendingReveal = pendingReveal.filter(function(el){
-        if (inView(el)) { el.classList.add('in'); return false; }
-        return true;
+      revealEls.forEach(function(el){
+        var v = visibility(el);
+        if (v === 'in') el.classList.add('in');
+        else if (v === 'out') el.classList.remove('in');
       });
-      pendingNums = pendingNums.filter(function(el){
-        if (inView(el)) { countUp(el); return false; }
-        return true;
+      numEls.forEach(function(el){
+        var v = visibility(el);
+        if (v === 'in' && !el._counting) { el._counting = true; countUp(el); }
+        else if (v === 'out') el._counting = false;
       });
-      if (!pendingReveal.length && !pendingNums.length) {
-        window.removeEventListener('scroll', onScroll);
-        window.removeEventListener('resize', onScroll);
+      if (heroTitle && !reduced) {
+        var hv = visibility(heroTitle);
+        if (hv === 'in') heroTitle.classList.add('settle');
+        else if (hv === 'out') heroTitle.classList.remove('settle');
       }
     }
     /* ---- letter settle: split headings into animated characters ---- */
