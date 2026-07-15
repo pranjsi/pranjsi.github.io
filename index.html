@@ -440,19 +440,6 @@
   (function(){
     var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    /* ---- scroll reveal ---- */
-    var revealEls = document.querySelectorAll('.reveal');
-    if (reduced || !('IntersectionObserver' in window)) {
-      revealEls.forEach(function(el){ el.classList.add('in'); });
-    } else {
-      var io = new IntersectionObserver(function(entries){
-        entries.forEach(function(e){
-          if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
-        });
-      }, { threshold: 0.18, rootMargin: '0px 0px -40px 0px' });
-      revealEls.forEach(function(el){ io.observe(el); });
-    }
-
     /* ---- KPI count-up ---- */
     function countUp(el){
       var raw = el.textContent.trim();
@@ -469,15 +456,42 @@
       }
       requestAnimationFrame(step);
     }
-    var nums = document.querySelectorAll('.kpi .num');
-    if (!reduced && 'IntersectionObserver' in window) {
-      var kio = new IntersectionObserver(function(entries){
-        entries.forEach(function(e){
-          if (e.isIntersecting) { countUp(e.target); kio.unobserve(e.target); }
-        });
-      }, { threshold: 0.6 });
-      nums.forEach(function(el){ kio.observe(el); });
+
+    /* ---- scroll reveal (scroll-position based; no IntersectionObserver
+           dependency so it works in throttled/embedded renderers too) ---- */
+    var pendingReveal = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+    var pendingNums = Array.prototype.slice.call(document.querySelectorAll('.kpi .num'));
+
+    if (reduced) {
+      pendingReveal.forEach(function(el){ el.classList.add('in'); });
+      pendingReveal = []; pendingNums = [];
     }
+
+    function inView(el){
+      var r = el.getBoundingClientRect();
+      return r.top < window.innerHeight - 40 && r.bottom > 0;
+    }
+    function sweep(){
+      pendingReveal = pendingReveal.filter(function(el){
+        if (inView(el)) { el.classList.add('in'); return false; }
+        return true;
+      });
+      pendingNums = pendingNums.filter(function(el){
+        if (inView(el)) { countUp(el); return false; }
+        return true;
+      });
+      if (!pendingReveal.length && !pendingNums.length) {
+        window.removeEventListener('scroll', onScroll);
+        window.removeEventListener('resize', onScroll);
+      }
+    }
+    var sweepTimer = 0;
+    function onScroll(){
+      if (!sweepTimer) sweepTimer = setTimeout(function(){ sweep(); sweepTimer = 0; }, 80);
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    sweep();
 
     /* ---- sankey: roles -> skill pillars ---- */
     var svg = document.getElementById('sankey');
