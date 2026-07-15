@@ -468,8 +468,8 @@
     }
 
     function inView(el){
-      var r = el.getBoundingClientRect();
-      return r.top < window.innerHeight - 40 && r.bottom > 0;
+      // reveal once the element has entered the viewport OR been scrolled past
+      return el.getBoundingClientRect().top < window.innerHeight - 40;
     }
     function sweep(){
       pendingReveal = pendingReveal.filter(function(el){
