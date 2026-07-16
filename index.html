@@ -221,9 +221,11 @@
   .hm-rowlab{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:11px; color:var(--text-soft); text-align:right; padding-right:4px; }
   .hm-cell{
     aspect-ratio:2.2/1; border-radius:5px; border:1px solid var(--panel-edge);
-    opacity:0; transform:scale(.92); transition:opacity .5s ease, transform .5s ease;
+    opacity:0; transform:scale(.55);
+    transition:opacity .45s ease var(--d,0s), transform .55s cubic-bezier(.34,1.56,.64,1) var(--d,0s), filter .2s ease;
   }
   .in .hm-cell{ opacity:1; transform:none; }
+  .hm-cell:hover{ filter:brightness(1.18); }
   .hm-cell.v0{ background:color-mix(in srgb, var(--teal) 6%, var(--panel)); }
   .hm-cell.v1{ background:color-mix(in srgb, var(--teal) 24%, var(--panel)); }
   .hm-cell.v2{ background:color-mix(in srgb, var(--teal) 52%, var(--panel)); }
@@ -234,11 +236,26 @@
   /* sankey */
   .sankey-wrap{ overflow-x:auto; }
   .sankey-wrap svg{ display:block; width:100%; height:auto; min-width:560px; }
-  .sankey-ribbon{ fill:none; stroke:var(--teal); opacity:.28; transition:opacity .25s ease; }
+  .sankey-ribbon{
+    fill:none; stroke:var(--teal); opacity:.28;
+    stroke-dasharray:var(--len,none); stroke-dashoffset:var(--len,0);
+    transition:opacity .25s ease, stroke-dashoffset .9s cubic-bezier(.25,.7,.3,1) var(--d,0s);
+  }
+  .in .sankey-ribbon{ stroke-dashoffset:0; }
   .sankey-ribbon:hover{ opacity:.55; }
-  .sankey-node{ fill:var(--teal); }
+  .sankey-node{
+    fill:var(--teal); transform-box:fill-box; transform-origin:center;
+    transform:scaleY(.1); opacity:0;
+    transition:transform .55s cubic-bezier(.34,1.56,.64,1) var(--d,0s), opacity .35s ease var(--d,0s);
+  }
   .sankey-node.right{ fill:var(--amber); }
-  .sankey-label{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:11px; fill:var(--text-soft); }
+  .in .sankey-node{ transform:none; opacity:1; }
+  .sankey-label{
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:11px; fill:var(--text-soft);
+    transform-box:fill-box; opacity:0; transform:translateX(var(--tx,0));
+    transition:opacity .5s ease var(--d,0s), transform .5s ease var(--d,0s);
+  }
+  .in .sankey-label{ opacity:1; transform:none; }
   .sankey-label.strong{ fill:var(--text); font-weight:600; }
 
   @media (max-width:720px){
@@ -252,6 +269,8 @@
     .reveal{ opacity:1; transform:none; transition:none; }
     .bar-fill{ transition:none; width:var(--w); }
     .hm-cell{ opacity:1; transform:none; transition:none; }
+    .sankey-node,.sankey-label{ opacity:1; transform:none; transition:none; }
+    .sankey-ribbon{ transition:none; stroke-dasharray:none; stroke-dashoffset:0; }
     .ltr{ opacity:1; transform:none; transition:none; }
     .amb{ transition:none; }
   }
@@ -613,6 +632,12 @@
     window.addEventListener('resize', onScroll);
     sweep(); parallax();
 
+    /* ---- heatmap: diagonal stagger (delay grows with row + column) ---- */
+    var hmCells = document.querySelectorAll('.heatmap .hm-cell');
+    Array.prototype.forEach.call(hmCells, function(c, i){
+      c.style.setProperty('--d', ((Math.floor(i / 4) + (i % 4)) * 0.07).toFixed(2) + 's');
+    });
+
     /* ---- sankey: roles -> skill pillars ---- */
     var svg = document.getElementById('sankey');
     if (!svg) return;
@@ -687,6 +712,21 @@
       var lbl = el('text', { 'class': 'sankey-label strong', x: rightX + nodeW + 10, y: p.y + p.h / 2 + 4 });
       lbl.textContent = p.name;
       svg.appendChild(lbl);
+    });
+
+    /* ---- sankey entrance: ribbons draw left->right, nodes pop, labels slide ---- */
+    Array.prototype.forEach.call(svg.querySelectorAll('.sankey-ribbon'), function(p, i){
+      p.style.setProperty('--len', Math.ceil(p.getTotalLength()) + 2);
+      p.style.setProperty('--d', (0.12 + i * 0.05).toFixed(2) + 's');
+    });
+    Array.prototype.forEach.call(svg.querySelectorAll('.sankey-node'), function(n, i){
+      var right = n.classList.contains('right');
+      n.style.setProperty('--d', ((right ? 0.6 : 0) + (i % 4) * 0.06).toFixed(2) + 's');
+    });
+    Array.prototype.forEach.call(svg.querySelectorAll('.sankey-label'), function(t){
+      var right = !t.hasAttribute('text-anchor'); // left labels are anchored "end"
+      t.style.setProperty('--tx', right ? '10px' : '-10px');
+      t.style.setProperty('--d', right ? '.7s' : '.15s');
     });
   })();
 </script>
