@@ -18,6 +18,11 @@
     --glass-hi: rgba(255,255,255,.42); --glass-blur: 20px; --glass-sat: 165%;
     --glass-top: rgba(255,255,255,.17); --glass-bot: rgba(255,255,255,.045);
     --glass-rim: rgba(255,255,255,.26); --glass-sheen: rgba(255,255,255,.18);
+    /* --- pill tint (amber). Complementary to the blue backdrop, so it pops.
+       To switch to green, swap these four for the .pill-green block below. --- */
+    --pill-top: rgba(255,178,86,.26);  --pill-bot: rgba(255,150,60,.07);
+    --pill-rim: rgba(255,201,130,.58); --pill-sheen: rgba(255,228,192,.30);
+    --pill-glow: rgba(255,168,64,.22);
     --text:#eaf3fc; --text-soft:#a6c3de;
     --teal:#4fd8e2; --teal-ink:#04222b;
     --amber:#ffc673;
@@ -32,6 +37,9 @@
       --glass-hi: rgba(255,255,255,.95); --glass-blur: 18px; --glass-sat: 150%;
       --glass-top: rgba(255,255,255,.78); --glass-bot: rgba(255,255,255,.26);
       --glass-rim: rgba(255,255,255,.92); --glass-sheen: rgba(255,255,255,.80);
+      --pill-top: rgba(255,190,110,.58); --pill-bot: rgba(255,164,72,.24);
+      --pill-rim: rgba(255,214,160,.95); --pill-sheen: rgba(255,242,224,.85);
+      --pill-glow: rgba(196,110,20,.18);
       --text:#0a2038; --text-soft:#40617f;
       --teal:#08657f; --teal-ink:#ffffff;
       --amber:#8a5609;
@@ -45,6 +53,11 @@
     --glass-hi: rgba(255,255,255,.42); --glass-blur: 20px; --glass-sat: 165%;
     --glass-top: rgba(255,255,255,.17); --glass-bot: rgba(255,255,255,.045);
     --glass-rim: rgba(255,255,255,.26); --glass-sheen: rgba(255,255,255,.18);
+    /* --- pill tint (amber). Complementary to the blue backdrop, so it pops.
+       To switch to green, swap these four for the .pill-green block below. --- */
+    --pill-top: rgba(255,178,86,.26);  --pill-bot: rgba(255,150,60,.07);
+    --pill-rim: rgba(255,201,130,.58); --pill-sheen: rgba(255,228,192,.30);
+    --pill-glow: rgba(255,168,64,.22);
     --text:#eaf3fc; --text-soft:#a6c3de; --teal:#4fd8e2; --teal-ink:#04222b; --amber:#ffc673;
     --line: rgba(224,240,255,.16); --shadow: rgba(2,12,26,.55);
   }
@@ -54,6 +67,9 @@
     --glass-hi: rgba(255,255,255,.95); --glass-blur: 18px; --glass-sat: 150%;
       --glass-top: rgba(255,255,255,.78); --glass-bot: rgba(255,255,255,.26);
       --glass-rim: rgba(255,255,255,.92); --glass-sheen: rgba(255,255,255,.80);
+      --pill-top: rgba(255,190,110,.58); --pill-bot: rgba(255,164,72,.24);
+      --pill-rim: rgba(255,214,160,.95); --pill-sheen: rgba(255,242,224,.85);
+      --pill-glow: rgba(196,110,20,.18);
     --text:#0a2038; --text-soft:#40617f; --teal:#08657f; --teal-ink:#ffffff; --amber:#8a5609;
     --line: rgba(10,32,56,.13); --shadow: rgba(20,60,100,.16);
   }
@@ -143,9 +159,14 @@
     transition: border-color .15s ease, background .15s ease, transform .12s ease;
     display:inline-flex; align-items:center; gap:6px;
   }
-  .btn:hover{ border-color:var(--teal); transform:translateY(-1px); }
-  .btn.primary{ background:var(--teal); border-color:var(--teal); color:var(--teal-ink); font-weight:600; }
-  .btn.primary:hover{ opacity:.92; }
+  .btn:hover{ border-color:transparent; }
+  /* primary CTA: solid amber, so it still outranks the translucent pills */
+  .btn.primary{
+    background:linear-gradient(180deg, var(--amber), color-mix(in srgb, var(--amber) 82%, #b8620a));
+    border-color:transparent; color:#241403; font-weight:700;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 3px 14px var(--pill-glow);
+  }
+  .btn.primary:hover{ filter:brightness(1.06); }
 
   /* ---------- hero ---------- */
   .hero{ padding:64px 0 40px; border-bottom:1px solid var(--line); }
@@ -207,33 +228,41 @@
        3. inset 0 0 0 1px rim            -> the lit edge of the glass
        4. inset bottom bounce + ::after  -> refracted sheen across the surface
      backdrop-filter supplies the actual blur/saturation of what's behind. */
+  /* To switch every pill to green, uncomment this block - it just overrides
+     the four --pill-* tokens, nothing else needs to change.
+  :root[data-theme="dark"]{
+    --pill-top: rgba(116,224,152,.24);  --pill-bot: rgba(72,198,128,.07);
+    --pill-rim: rgba(150,242,182,.56);  --pill-sheen: rgba(214,255,230,.28);
+    --pill-glow: rgba(80,210,140,.22);
+  }
+  */
   .chip, .btn{
     position:relative; overflow:hidden;
     border-radius:999px;
     border:1px solid transparent;
-    background:linear-gradient(180deg, var(--glass-top), var(--glass-bot));
+    background:linear-gradient(180deg, var(--pill-top), var(--pill-bot));
     -webkit-backdrop-filter:blur(20px) saturate(200%);
     backdrop-filter:blur(20px) saturate(200%);
     box-shadow:
       inset 0 1px 0 var(--glass-hi),
-      inset 0 0 0 1px var(--glass-rim),
-      inset 0 -9px 16px -12px var(--glass-hi),
+      inset 0 0 0 1px var(--pill-rim),
+      inset 0 -9px 16px -12px var(--pill-rim),
       0 2px 10px var(--shadow);
     transition: transform .18s cubic-bezier(.2,.8,.3,1), box-shadow .18s ease, background .18s ease;
   }
   /* the moving specular streak across the capsule face */
   .chip::after, .btn::after{
     content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
-    background:linear-gradient(118deg, transparent 22%, var(--glass-sheen) 46%, transparent 64%);
+    background:linear-gradient(118deg, transparent 22%, var(--pill-sheen) 46%, transparent 64%);
     opacity:.55; transition:opacity .18s ease, transform .5s cubic-bezier(.2,.8,.3,1);
   }
   .chip:hover, .btn:hover{
     transform:translateY(-1.5px);
     box-shadow:
       inset 0 1px 0 var(--glass-hi),
-      inset 0 0 0 1px var(--glass-rim),
-      inset 0 -12px 20px -12px var(--glass-hi),
-      0 8px 22px var(--shadow);
+      inset 0 0 0 1px var(--pill-rim),
+      inset 0 -12px 20px -12px var(--pill-rim),
+      0 8px 22px var(--shadow), 0 0 18px var(--pill-glow);
   }
   .chip:hover::after, .btn:hover::after{ opacity:.85; transform:translateX(12%); }
   .chip:active, .btn:active{ transform:translateY(0) scale(.985); }
