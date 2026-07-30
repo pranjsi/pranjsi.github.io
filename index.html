@@ -160,6 +160,19 @@
 
   /* ---------- ambient side visuals (wide screens only) ---------- */
   .ambient{ position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+
+  /* ---------- live data-network background (interactive) ---------- */
+  /* pointer-events:none keeps it from swallowing clicks; the cursor is tracked
+     on window instead, so links and buttons behave normally. */
+  #dataflow{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    opacity:0; transition:opacity 1.6s ease;
+  }
+  #dataflow.on{ opacity:.5; }
+  :root[data-theme="light"] #dataflow.on{ opacity:.38; }
+  @media (prefers-color-scheme: light){ :root:not([data-theme="dark"]) #dataflow.on{ opacity:.38; } }
+  @media (prefers-reduced-motion: reduce){ #dataflow{ display:none !important; } }
+
   .wrap, .topbar{ position:relative; z-index:1; }
   .topbar{ z-index:50; }
   .amb{ position:absolute; opacity:0; transition:opacity 1.2s ease; }
@@ -278,6 +291,8 @@
 </head>
 <body>
 
+
+<canvas id="dataflow" aria-hidden="true"></canvas>
 
 <div class="ambient" aria-hidden="true">
   <div class="amb amb-orb" data-para="0.06"></div>
@@ -729,6 +744,135 @@
       t.style.setProperty('--d', right ? '.7s' : '.15s');
     });
   })();
+
+/* ---------------- live data-network background ----------------
+   A drifting node/edge field themed from the site's CSS variables.
+   Interactive: nodes lean toward the cursor and nearby edges brighten.
+   Chosen over a <video> deliberately - no multi-MB payload on GitHub Pages,
+   no autoplay/battery problems on mobile, and it reads as data rather than
+   stock footage. Degrades to nothing if reduced-motion is requested. */
+(function(){
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var cv = document.getElementById('dataflow');
+  if (reduced || !cv || !cv.getContext) return;
+
+  var ctx = cv.getContext('2d'), w = 0, h = 0, dpr = 1;
+  var nodes = [], raf = null, teal = [63,196,179], amber = [234,169,63];
+  var mouse = { x: -9999, y: -9999 };
+  var LINK = 132, PULL = 108;
+
+  function toRgb(v, fallback){
+    v = (v || '').trim().replace('#','');
+    if (v.length === 3) v = v.charAt(0)+v.charAt(0)+v.charAt(1)+v.charAt(1)+v.charAt(2)+v.charAt(2);
+    if (!/^[0-9a-f]{6}$/i.test(v)) return fallback;
+    var n = parseInt(v, 16);
+    return [(n>>16)&255, (n>>8)&255, n&255];
+  }
+  function readTheme(){
+    var cs = getComputedStyle(document.documentElement);
+    teal  = toRgb(cs.getPropertyValue('--teal'),  [63,196,179]);
+    amber = toRgb(cs.getPropertyValue('--amber'), [234,169,63]);
+  }
+  function rgba(c, a){ return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'; }
+
+  function targetCount(){
+    // density scaled to viewport, capped so phones and 4K both stay smooth
+    return Math.max(22, Math.min(85, Math.round((window.innerWidth*window.innerHeight)/17000)));
+  }
+
+  function build(){
+    var n = targetCount(); nodes = [];
+    for (var i=0;i<n;i++){
+      nodes.push({
+        x: Math.random()*w, y: Math.random()*h,
+        vx: (Math.random()-0.5)*0.20, vy: (Math.random()-0.5)*0.20,
+        r: Math.random()*1.5 + 1.0,
+        accent: Math.random() < 0.13
+      });
+    }
+  }
+
+  function resize(){
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = window.innerWidth; h = window.innerHeight;
+    cv.width = Math.round(w*dpr); cv.height = Math.round(h*dpr);
+    cv.style.width = w+'px'; cv.style.height = h+'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    build();
+  }
+
+  function frame(){
+    ctx.clearRect(0,0,w,h);
+    var i, j, a, b, dx, dy, d2, d, alpha;
+
+    for (i=0;i<nodes.length;i++){
+      a = nodes[i];
+      a.x += a.vx; a.y += a.vy;
+      if (a.x < -20) a.x = w+20; else if (a.x > w+20) a.x = -20;
+      if (a.y < -20) a.y = h+20; else if (a.y > h+20) a.y = -20;
+
+      // gentle lean toward the cursor - the interactive part
+      dx = mouse.x - a.x; dy = mouse.y - a.y; d2 = dx*dx + dy*dy;
+      if (d2 < PULL*PULL && d2 > 1){
+        d = Math.sqrt(d2);
+        a.x += (dx/d) * 0.34; a.y += (dy/d) * 0.34;
+      }
+    }
+
+    // edges
+    for (i=0;i<nodes.length;i++){
+      a = nodes[i];
+      for (j=i+1;j<nodes.length;j++){
+        b = nodes[j];
+        dx = a.x-b.x; dy = a.y-b.y; d2 = dx*dx + dy*dy;
+        if (d2 > LINK*LINK) continue;
+        d = Math.sqrt(d2);
+        alpha = (1 - d/LINK) * 0.30;
+        // brighten edges near the cursor
+        var mx = (a.x+b.x)/2 - mouse.x, my = (a.y+b.y)/2 - mouse.y;
+        if (mx*mx + my*my < PULL*PULL) alpha = Math.min(0.62, alpha*2.3);
+        ctx.strokeStyle = rgba(teal, alpha);
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();
+      }
+    }
+
+    // nodes
+    for (i=0;i<nodes.length;i++){
+      a = nodes[i];
+      ctx.fillStyle = rgba(a.accent ? amber : teal, a.accent ? 0.80 : 0.55);
+      ctx.beginPath(); ctx.arc(a.x, a.y, a.r, 0, Math.PI*2); ctx.fill();
+    }
+
+    raf = requestAnimationFrame(frame);
+  }
+
+  function start(){ if (raf === null) raf = requestAnimationFrame(frame); }
+  function stop(){ if (raf !== null){ cancelAnimationFrame(raf); raf = null; } }
+
+  window.addEventListener('resize', function(){ resize(); }, { passive:true });
+  window.addEventListener('mousemove', function(e){ mouse.x = e.clientX; mouse.y = e.clientY; }, { passive:true });
+  window.addEventListener('mouseout', function(){ mouse.x = -9999; mouse.y = -9999; }, { passive:true });
+  window.addEventListener('touchmove', function(e){
+    if (e.touches && e.touches[0]){ mouse.x = e.touches[0].clientX; mouse.y = e.touches[0].clientY; }
+  }, { passive:true });
+  window.addEventListener('touchend', function(){ mouse.x = -9999; mouse.y = -9999; }, { passive:true });
+
+  // don't burn battery in a background tab
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) stop(); else start();
+  });
+
+  // follow the site's light/dark toggle and the OS preference
+  new MutationObserver(readTheme).observe(document.documentElement, {
+    attributes:true, attributeFilter:['data-theme']
+  });
+  var mq = window.matchMedia('(prefers-color-scheme: light)');
+  if (mq.addEventListener) mq.addEventListener('change', readTheme);
+
+  readTheme(); resize(); start();
+  requestAnimationFrame(function(){ cv.classList.add('on'); });
+})();
 </script>
 
 </body>
