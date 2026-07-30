@@ -6,39 +6,94 @@
 <meta name="description" content="Pranjal Singh - Senior Business Intelligence Developer. Data visualization, forecasting, pattern recognition, and applied statistical modeling across healthcare, HR, ed-tech, and client operations.">
 <title>Pranjal Singh — Business Intelligence Developer</title>
 <style>
+  /* ---------- sky-blue liquid glass palette ----------
+     --panel / --panel-edge are now translucent, so every surface that used
+     them becomes glass automatically. --sky1..3 drive the aurora field. */
   :root{
-    --ink:#0f2036; --panel:#16304a; --panel-edge:#20415f;
-    --text:#eef3f8; --text-soft:#a9bccb;
-    --teal:#3fc4b3; --teal-ink:#04241f;
-    --amber:#eaa93f;
-    --line: rgba(238,243,248,.14);
-    --shadow: rgba(4,12,20,.5);
+    --ink:#06182f; --ink2:#0c3357;
+    --sky1:#1d6fb8; --sky2:#2aa7c9; --sky3:#5f4fd0;
+    --panel: rgba(255,255,255,.075); --panel-edge: rgba(255,255,255,.17);
+    --glass-hi: rgba(255,255,255,.42); --glass-blur: 20px; --glass-sat: 165%;
+    --text:#eaf3fc; --text-soft:#a6c3de;
+    --teal:#4fd8e2; --teal-ink:#04222b;
+    --amber:#ffc673;
+    --line: rgba(224,240,255,.16);
+    --shadow: rgba(2,12,26,.55);
   }
   @media (prefers-color-scheme: light){
     :root{
-      --ink:#f3f6f8; --panel:#ffffff; --panel-edge:#dfe6ea;
-      --text:#101b26; --text-soft:#54636f;
-      --teal:#158b7b; --teal-ink:#ffffff;
-      --amber:#a5701c;
-      --line: rgba(16,27,38,.12);
-      --shadow: rgba(16,27,38,.14);
+      --ink:#d8ecfd; --ink2:#eef7ff;
+      --sky1:#8fc4f0; --sky2:#9fdcea; --sky3:#b3aef0;
+      --panel: rgba(255,255,255,.55); --panel-edge: rgba(255,255,255,.85);
+      --glass-hi: rgba(255,255,255,.95); --glass-blur: 18px; --glass-sat: 150%;
+      --text:#0a2038; --text-soft:#40617f;
+      --teal:#08657f; --teal-ink:#ffffff;
+      --amber:#8a5609;
+      --line: rgba(10,32,56,.13);
+      --shadow: rgba(20,60,100,.16);
     }
   }
   :root[data-theme="dark"]{
-    --ink:#0f2036; --panel:#16304a; --panel-edge:#20415f; --text:#eef3f8; --text-soft:#a9bccb;
-    --teal:#3fc4b3; --teal-ink:#04241f; --amber:#eaa93f; --line: rgba(238,243,248,.14); --shadow: rgba(4,12,20,.5);
+    --ink:#06182f; --ink2:#0c3357; --sky1:#1d6fb8; --sky2:#2aa7c9; --sky3:#5f4fd0;
+    --panel: rgba(255,255,255,.075); --panel-edge: rgba(255,255,255,.17);
+    --glass-hi: rgba(255,255,255,.42); --glass-blur: 20px; --glass-sat: 165%;
+    --text:#eaf3fc; --text-soft:#a6c3de; --teal:#4fd8e2; --teal-ink:#04222b; --amber:#ffc673;
+    --line: rgba(224,240,255,.16); --shadow: rgba(2,12,26,.55);
   }
   :root[data-theme="light"]{
-    --ink:#f3f6f8; --panel:#ffffff; --panel-edge:#dfe6ea; --text:#101b26; --text-soft:#54636f;
-    --teal:#158b7b; --teal-ink:#ffffff; --amber:#a5701c; --line: rgba(16,27,38,.12); --shadow: rgba(16,27,38,.14);
+    --ink:#d8ecfd; --ink2:#eef7ff; --sky1:#8fc4f0; --sky2:#9fdcea; --sky3:#b3aef0;
+    --panel: rgba(255,255,255,.55); --panel-edge: rgba(255,255,255,.85);
+    --glass-hi: rgba(255,255,255,.95); --glass-blur: 18px; --glass-sat: 150%;
+    --text:#0a2038; --text-soft:#40617f; --teal:#08657f; --teal-ink:#ffffff; --amber:#8a5609;
+    --line: rgba(10,32,56,.13); --shadow: rgba(20,60,100,.16);
   }
 
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
   body{
-    background:var(--ink); color:var(--text);
+    background:linear-gradient(170deg, var(--ink) 0%, var(--ink2) 55%, var(--ink) 100%);
+    background-attachment:fixed;
+    color:var(--text);
     font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     font-size:16px; line-height:1.6; -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---------- sky field: slow-drifting aurora blobs behind the glass ---------- */
+  .sky{ position:fixed; inset:-20%; z-index:-1; pointer-events:none; overflow:hidden; filter:blur(52px); }
+  .sky i{
+    position:absolute; display:block; border-radius:50%;
+    mix-blend-mode:screen; opacity:.55;
+    animation:drift 26s ease-in-out infinite alternate;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]) .sky i{ mix-blend-mode:multiply; opacity:.40; }
+  }
+  :root[data-theme="light"] .sky i{ mix-blend-mode:multiply; opacity:.40; }
+  .sky .s1{ width:52vw; height:52vw; left:-6vw;  top:-4vw;  background:radial-gradient(circle at 40% 40%, var(--sky1), transparent 68%); }
+  .sky .s2{ width:46vw; height:46vw; right:-8vw; top:18vh;  background:radial-gradient(circle at 55% 45%, var(--sky2), transparent 66%); animation-duration:32s; animation-delay:-8s; }
+  .sky .s3{ width:40vw; height:40vw; left:22vw;  bottom:-10vw; background:radial-gradient(circle at 45% 55%, var(--sky3), transparent 64%); animation-duration:38s; animation-delay:-16s; }
+  @keyframes drift{
+    0%   { transform:translate3d(0,0,0) scale(1); }
+    50%  { transform:translate3d(3vw,-2vh,0) scale(1.10); }
+    100% { transform:translate3d(-2vw,3vh,0) scale(.95); }
+  }
+  @media (prefers-reduced-motion: reduce){ .sky i{ animation:none; } }
+
+  /* ---------- glass surface treatment ----------
+     Applied to every panel-ish component. The ::before is the specular top
+     edge that makes a translucent panel read as glass rather than as fog. */
+  .kpi, .chip, .edu-card, .viz-card, .btn{
+    -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
+    backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
+  }
+  .kpi, .edu-card, .viz-card{ position:relative; overflow:hidden; }
+  .kpi::before, .edu-card::before, .viz-card::before{
+    content:""; position:absolute; left:0; right:0; top:0; height:1px;
+    background:linear-gradient(90deg, transparent, var(--glass-hi), transparent);
+    pointer-events:none;
+  }
+  .edu-card, .viz-card{
+    box-shadow:0 8px 30px var(--shadow), inset 0 1px 0 rgba(255,255,255,.10);
   }
   .serif{ font-family: Georgia,"Iowan Old Style","Palatino Linotype",serif; }
   .mono{ font-family: ui-monospace,"SF Mono",Consolas,"Courier New",monospace; font-variant-numeric:tabular-nums; }
@@ -51,8 +106,10 @@
     position:sticky; top:0; z-index:50;
     border-bottom:1px solid var(--line);
     padding:14px 0;
-    background:color-mix(in srgb, var(--ink) 82%, transparent);
-    -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+    background:color-mix(in srgb, var(--ink) 55%, transparent);
+    -webkit-backdrop-filter:blur(22px) saturate(var(--glass-sat));
+    backdrop-filter:blur(22px) saturate(var(--glass-sat));
+    box-shadow:0 1px 0 var(--glass-hi) inset, 0 6px 24px var(--shadow);
   }
   .topbar .wrap{ display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
   .brand{ font-family: Georgia,serif; font-weight:700; font-size:17px; letter-spacing:.01em; }
@@ -291,6 +348,8 @@
 </head>
 <body>
 
+
+<div class="sky" aria-hidden="true"><i class="s1"></i><i class="s2"></i><i class="s3"></i></div>
 
 <canvas id="dataflow" aria-hidden="true"></canvas>
 
@@ -870,8 +929,12 @@
   var mq = window.matchMedia('(prefers-color-scheme: light)');
   if (mq.addEventListener) mq.addEventListener('change', readTheme);
 
-  readTheme(); resize(); start();
-  requestAnimationFrame(function(){ cv.classList.add('on'); });
+  readTheme(); resize();
+  if (!document.hidden) start();
+  // Fade in via timeout, not requestAnimationFrame: a page opened in a
+  // background tab never fires a rAF, which would leave the layer stuck
+  // invisible even after the tab is brought forward.
+  setTimeout(function(){ cv.classList.add('on'); }, 60);
 })();
 </script>
 
