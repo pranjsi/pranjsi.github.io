@@ -18,11 +18,12 @@
     --glass-hi: rgba(255,255,255,.42); --glass-blur: 20px; --glass-sat: 165%;
     --glass-top: rgba(255,255,255,.17); --glass-bot: rgba(255,255,255,.045);
     --glass-rim: rgba(255,255,255,.26); --glass-sheen: rgba(255,255,255,.18);
-    /* --- pill tint (amber). Complementary to the blue backdrop, so it pops.
-       To switch to green, swap these four for the .pill-green block below. --- */
-    --pill-top: rgba(255,178,86,.26);  --pill-bot: rgba(255,150,60,.07);
-    --pill-rim: rgba(255,201,130,.58); --pill-sheen: rgba(255,228,192,.30);
-    --pill-glow: rgba(255,168,64,.22);
+    /* --- accent pills (Resume + email) only. Sage-to-forest green sampled
+       from the supplied reference gradient. --- */
+    --accent:      #b7ce93;  /* pale sage, top of the gradient */
+    --accent-deep: #6f9550;  /* deeper green, bottom */
+    --accent-ink:  #14220d;  /* near-black green for the label */
+    --pill-glow: rgba(139,181,101,.30);
     --text:#eaf3fc; --text-soft:#a6c3de;
     --teal:#4fd8e2; --teal-ink:#04222b;
     --amber:#ffc673;
@@ -37,9 +38,8 @@
       --glass-hi: rgba(255,255,255,.95); --glass-blur: 18px; --glass-sat: 150%;
       --glass-top: rgba(255,255,255,.78); --glass-bot: rgba(255,255,255,.26);
       --glass-rim: rgba(255,255,255,.92); --glass-sheen: rgba(255,255,255,.80);
-      --pill-top: rgba(255,190,110,.58); --pill-bot: rgba(255,164,72,.24);
-      --pill-rim: rgba(255,214,160,.95); --pill-sheen: rgba(255,242,224,.85);
-      --pill-glow: rgba(196,110,20,.18);
+      --accent:#6d9450; --accent-deep:#4d7038; --accent-ink:#ffffff;
+      --pill-glow: rgba(90,130,60,.20);
       --text:#0a2038; --text-soft:#40617f;
       --teal:#08657f; --teal-ink:#ffffff;
       --amber:#8a5609;
@@ -53,11 +53,12 @@
     --glass-hi: rgba(255,255,255,.42); --glass-blur: 20px; --glass-sat: 165%;
     --glass-top: rgba(255,255,255,.17); --glass-bot: rgba(255,255,255,.045);
     --glass-rim: rgba(255,255,255,.26); --glass-sheen: rgba(255,255,255,.18);
-    /* --- pill tint (amber). Complementary to the blue backdrop, so it pops.
-       To switch to green, swap these four for the .pill-green block below. --- */
-    --pill-top: rgba(255,178,86,.26);  --pill-bot: rgba(255,150,60,.07);
-    --pill-rim: rgba(255,201,130,.58); --pill-sheen: rgba(255,228,192,.30);
-    --pill-glow: rgba(255,168,64,.22);
+    /* --- accent pills (Resume + email) only. Sage-to-forest green sampled
+       from the supplied reference gradient. --- */
+    --accent:      #b7ce93;  /* pale sage, top of the gradient */
+    --accent-deep: #6f9550;  /* deeper green, bottom */
+    --accent-ink:  #14220d;  /* near-black green for the label */
+    --pill-glow: rgba(139,181,101,.30);
     --text:#eaf3fc; --text-soft:#a6c3de; --teal:#4fd8e2; --teal-ink:#04222b; --amber:#ffc673;
     --line: rgba(224,240,255,.16); --shadow: rgba(2,12,26,.55);
   }
@@ -67,9 +68,8 @@
     --glass-hi: rgba(255,255,255,.95); --glass-blur: 18px; --glass-sat: 150%;
       --glass-top: rgba(255,255,255,.78); --glass-bot: rgba(255,255,255,.26);
       --glass-rim: rgba(255,255,255,.92); --glass-sheen: rgba(255,255,255,.80);
-      --pill-top: rgba(255,190,110,.58); --pill-bot: rgba(255,164,72,.24);
-      --pill-rim: rgba(255,214,160,.95); --pill-sheen: rgba(255,242,224,.85);
-      --pill-glow: rgba(196,110,20,.18);
+      --accent:#6d9450; --accent-deep:#4d7038; --accent-ink:#ffffff;
+      --pill-glow: rgba(90,130,60,.20);
     --text:#0a2038; --text-soft:#40617f; --teal:#08657f; --teal-ink:#ffffff; --amber:#8a5609;
     --line: rgba(10,32,56,.13); --shadow: rgba(20,60,100,.16);
   }
@@ -162,9 +162,9 @@
   .btn:hover{ border-color:transparent; }
   /* primary CTA: solid amber, so it still outranks the translucent pills */
   .btn.primary{
-    background:linear-gradient(180deg, var(--amber), color-mix(in srgb, var(--amber) 82%, #b8620a));
-    border-color:transparent; color:#241403; font-weight:700;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.55), 0 3px 14px var(--pill-glow);
+    background:linear-gradient(180deg, var(--accent), var(--accent-deep));
+    border-color:transparent; color:var(--accent-ink); font-weight:700;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.45), 0 3px 14px var(--pill-glow);
   }
   .btn.primary:hover{ filter:brightness(1.06); }
 
@@ -228,15 +228,9 @@
        3. inset 0 0 0 1px rim            -> the lit edge of the glass
        4. inset bottom bounce + ::after  -> refracted sheen across the surface
      backdrop-filter supplies the actual blur/saturation of what's behind. */
-  /* --pill-* tints ONLY the two accent pills (Resume + email). Every other
-     capsule stays clear glass. To make those two green instead of amber,
-     uncomment this block - nothing else needs to change.
-  :root[data-theme="dark"]{
-    --pill-top: rgba(116,224,152,.24);  --pill-bot: rgba(72,198,128,.07);
-    --pill-rim: rgba(150,242,182,.56);  --pill-sheen: rgba(214,255,230,.28);
-    --pill-glow: rgba(80,210,140,.22);
-  }
-  */
+  /* Colour lives on the two accent pills only (Resume + email), via
+     --accent / --accent-deep / --accent-ink. Every other capsule below stays
+     clear glass. */
   .chip, .btn{
     position:relative; overflow:hidden;
     border-radius:999px;
