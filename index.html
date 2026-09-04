@@ -339,7 +339,10 @@
   @media (max-width:1240px){ .ambient{ display:none; } }
 
   /* ---------- scroll reveal (Apple-style quiet entrances) ---------- */
-  .reveal{ opacity:0; transform:translateY(18px); transition:opacity .7s ease, transform .7s ease; }
+  /* 3D tilt on entry: elements settle up out of perspective rather than
+     sliding flat, echoing the pinned-card tilt on ventriloc.ca. */
+  .reveal{ opacity:0; transform:perspective(1000px) translateY(20px) rotateX(7deg); transform-origin:50% 100%;
+           transition:opacity .7s ease, transform .8s cubic-bezier(.22,.68,.28,1); }
   .reveal.in{ opacity:1; transform:none; }
   .reveal.d1{ transition-delay:.08s; } .reveal.d2{ transition-delay:.16s; } .reveal.d3{ transition-delay:.24s; }
 
@@ -425,11 +428,75 @@
     .sankey-ribbon{ transition:none; stroke-dasharray:none; stroke-dashoffset:0; }
     .ltr{ opacity:1; transform:none; transition:none; }
     .amb{ transition:none; }
+    .curtain{ display:none; }
+    .ticker__track{ animation:none; }
+    .section-head{ position:static; backdrop-filter:none; -webkit-backdrop-filter:none; }
+  }
+
+  /* ================= motion patterns adapted from a BI-consultancy site
+     (ventriloc.ca): a brand-colour load curtain, an infinite tool ticker,
+     pinned section headings, and a 3D tilt on scroll reveals. ================= */
+
+  /* --- 1. load curtain: a leather panel that wipes up off the page.
+         Pure CSS, so it always clears even if scripting fails. --- */
+  .curtain{
+    position:fixed; inset:0; z-index:9000; pointer-events:none;
+    background:linear-gradient(160deg,#8a5731 0%,#5f3a20 42%,var(--ink) 100%);
+    display:grid; place-items:center;
+    animation:curtainUp 1.15s cubic-bezier(.76,0,.24,1) .55s forwards;
+  }
+  .curtain span{
+    font-family:Georgia,"Times New Roman",serif; letter-spacing:.06em;
+    font-size:clamp(20px,3.6vw,34px); color:#fdf3e7;
+    opacity:0; transform:translateY(12px);
+    animation:curtainMark .5s cubic-bezier(.2,.8,.2,1) .08s forwards;
+  }
+  @keyframes curtainMark{ to{ opacity:1; transform:none; } }
+  @keyframes curtainUp{ to{ transform:translateY(-101%); } }
+
+  /* --- 2. tool ticker: seamless marquee. The track holds the list twice and
+         slides exactly -50%; spacing is margin (not gap) so the two halves
+         stay identical and the loop never drifts. --- */
+  .ticker{ margin-top:30px; }
+  .ticker__label{
+    font-family:ui-monospace,"SF Mono",Consolas,"Courier New",monospace;
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--text-soft); opacity:.75; margin-bottom:12px;
+  }
+  .ticker__mask{
+    overflow:hidden;
+    -webkit-mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);
+    mask-image:linear-gradient(90deg,transparent,#000 7%,#000 93%,transparent);
+  }
+  .ticker__track{
+    display:flex; width:max-content;
+    animation:tickerRun 46s linear infinite;
+  }
+  .ticker__mask:hover .ticker__track{ animation-play-state:paused; }
+  .ticker__track b{
+    flex:none; margin-right:10px; font-weight:500; font-size:13px;
+    color:var(--text-soft); padding:7px 14px; border-radius:999px;
+    background:var(--panel); border:1px solid var(--panel-edge);
+    backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
+    -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-sat));
+  }
+  @keyframes tickerRun{ to{ transform:translateX(-50%); } }
+
+  /* --- 3. section headings pin while you scroll their section (desktop only;
+         on narrow screens they'd eat too much of the viewport). --- */
+  @media (min-width:880px){
+    .section-head{
+      position:sticky; top:0; z-index:6;
+      padding:18px 0 12px; margin-bottom:16px;
+      backdrop-filter:blur(14px) saturate(150%);
+      -webkit-backdrop-filter:blur(14px) saturate(150%);
+    }
   }
 </style>
 </head>
 <body>
 
+<div class="curtain" aria-hidden="true"><span>Pranjal Singh</span></div>
 
 <div class="sky" aria-hidden="true"><i class="s1"></i><i class="s2"></i><i class="s3"></i></div>
 
@@ -482,6 +549,16 @@
       <div class="kpi"><div class="num mono">100+</div><div class="label">dashboards &amp; reports delivered across career</div></div>
       <div class="kpi"><div class="num mono">1000+</div><div class="label">business users served across companies</div></div>
       <div class="kpi"><div class="num mono">50%</div><div class="label">faster report turnaround delivered</div></div>
+    </div>
+
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker__label">working stack</div>
+      <div class="ticker__mask">
+        <div class="ticker__track">
+          <b>SQL</b><b>Tableau</b><b>Power BI</b><b>Python</b><b>R</b><b>SAS Enterprise Guide</b><b>DB2</b><b>Azure Data Factory</b><b>Databricks</b><b>SSIS</b><b>Alteryx</b><b>Qlik</b><b>Spark</b><b>PostgreSQL</b><b>MS SQL Server</b><b>Data Modeling</b><b>ETL Development</b><b>Forecasting</b>
+          <b>SQL</b><b>Tableau</b><b>Power BI</b><b>Python</b><b>R</b><b>SAS Enterprise Guide</b><b>DB2</b><b>Azure Data Factory</b><b>Databricks</b><b>SSIS</b><b>Alteryx</b><b>Qlik</b><b>Spark</b><b>PostgreSQL</b><b>MS SQL Server</b><b>Data Modeling</b><b>ETL Development</b><b>Forecasting</b>
+        </div>
+      </div>
     </div>
   </header>
 
